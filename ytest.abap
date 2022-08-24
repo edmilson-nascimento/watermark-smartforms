@@ -4,6 +4,12 @@
 *&
 *&---------------------------------------------------------------------*
 REPORT ytest00.
+*&---------------------------------------------------------------------*
+*& Report ytest00
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+report ytest00.
 
 
 class lcl_local definition .
@@ -40,7 +46,7 @@ class lcl_local definition .
       c_smartforms type tdsfname value 'YTEST' .
 
     data:
-      gv_image     type lcl_local=>ty_return,
+      gv_image     type ssfscreen-gr_nam_sym,
       gv_func_name type rs38l_fnam.
 
     methods get_config .
@@ -74,9 +80,8 @@ class lcl_local implementation .
         no_form            = 1
         no_function_module = 2
         others             = 3.
-    if sy-subrc <> 0.
-*       message id sy-msgid type sy-msgty number sy-msgno
-*         with sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+
+    if ( sy-subrc ne 0 ) .
     endif.
 
   endmethod .
@@ -84,35 +89,49 @@ class lcl_local implementation .
 
   method show_sf .
 
+    data:
+      ls_control_parameters type ssfctrlop,
+      ls_output_options     type ssfcompop.
+
+*    ls_control_parameters-no_close = space .
+
+    ls_output_options-tddest    = 'LOCL' .
+    ls_output_options-tdimmed   = abap_off .
+    ls_output_options-tddelete  = abap_on .
+    "ls_output_options-tdprinter = 'LOCL' .
+    ls_output_options-tddataset = '' . "Ordem spool: nome
+    ls_output_options-tdsuffix1 = '' . "Ordem spool: sufixo 1
+    ls_output_options-tdsuffix2 = '' . "Ordem spool: sufixo 2
+
+    me->get_config( ) .
+
     if ( me->gv_func_name is not initial ) .
 
-*    call function '/1BCDWB/SF00011452'
-*      exporting
-**        ARCHIVE_INDEX        =
-**        ARCHIVE_INDEX_TAB    =
-**        ARCHIVE_PARAMETERS   =
-**        CONTROL_PARAMETERS   =
-**        MAIL_APPL_OBJ        =
-**        MAIL_RECIPIENT       =
-**        MAIL_SENDER          =
-**        OUTPUT_OPTIONS       =
-**        USER_SETTINGS        = 'X'
-*        IMAGE                = me->
-**      importing
-**        DOCUMENT_OUTPUT_INFO =
-**        JOB_OUTPUT_INFO      =
-**        JOB_OUTPUT_OPTIONS   =
-**      exceptions
-**        FORMATTING_ERROR     = 1
-**        INTERNAL_ERROR       = 2
-**        SEND_ERROR           = 3
-**        USER_CANCELED        = 4
-**        OTHERS               = 5
-*      .
-*    if sy-subrc <> 0.
-**     message id sy-msgid type sy-msgty number sy-msgno
-**       with sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-*    endif.
+      call function me->gv_func_name
+        exporting
+*         archive_index      =
+*         archive_index_tab  =
+*         archive_parameters =
+          control_parameters = ls_control_parameters
+*         mail_appl_obj      =
+*         mail_recipient     =
+*         mail_sender        =
+          output_options     = ls_output_options
+*         user_settings      = 'x'
+          image              = me->gv_image
+*       importing
+*         document_output_info       =
+*         job_output_info    =
+*         job_output_options =
+        exceptions
+          formatting_error   = 1
+          internal_error     = 2
+          send_error         = 3
+          user_canceled      = 4
+          others             = 5.
+
+      if ( sy-subrc ne 0 ) .
+      endif.
 
     endif .
 
